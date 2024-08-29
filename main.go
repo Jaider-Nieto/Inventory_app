@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/jaider-nieto/ecommerce-go/db"
@@ -13,5 +14,8 @@ func main() {
 
 	db.DB.AutoMigrate(models.User{}, models.Task{})
 
-	http.ListenAndServe(":3001", routes.Routes())
+	err := http.ListenAndServe(":3001", routes.Routes())
+	if err != nil {
+		log.Fatal("Failed to start the server.")
+	}
 }

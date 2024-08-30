@@ -7,17 +7,16 @@ import (
 	"gorm.io/gorm"
 )
 
-var DSN = "host=localhost user=jaider password=1005716614 dbname=ecommerce port=5432"
 var DB *gorm.DB
 
-func DBConnection() {
+func DBConnection(DNS string) {
 	var err error
 
-	DB, err = gorm.Open(postgres.Open(DSN), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(DNS), &gorm.Config{})
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	log.Println("DB connected")
 }

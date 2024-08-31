@@ -20,5 +20,5 @@ func main() {
 
 	db.DB.AutoMigrate(models.User{}, models.Task{})
 
-	http.ListenAndServe(os.Getenv("PORT"), routes.Routes())
+	http.ListenAndServe(os.Getenv("PORT"), routes.Routes(db.DB))
 }

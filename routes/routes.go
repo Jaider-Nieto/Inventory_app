@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewRouter(db *gorm.DB) *mux.Router {
+func Routes(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter()
 
 	repo := repository.NewRepository(db)
@@ -16,12 +16,11 @@ func NewRouter(db *gorm.DB) *mux.Router {
 
 	handlerUsers := handlers.NewUserHandler(userReposiroy)
 
-	
 	//Rutas User.
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
-	// r.HandleFunc("/users/{id}", handlers.GetUserHandler).Methods("GET")
-	// r.HandleFunc("/users", handlers.PostUserHanlder).Methods("POST")
-	// r.HandleFunc("/users/{id}", handlers.DeleteUserHandler).Methods("DELETE")
+	r.HandleFunc("/users/{id}", handlerUsers.GetUserHandler).Methods("GET")
+	r.HandleFunc("/users", handlerUsers.PostUserHanlder).Methods("POST")
+	r.HandleFunc("/users/{id}", handlerUsers.DeleteUserHandler).Methods("DELETE")
 
 	//Rutas Task.
 	r.HandleFunc("/tasks", handlers.GetTasksHandler).Methods("GET")

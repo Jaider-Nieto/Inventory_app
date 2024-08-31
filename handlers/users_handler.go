@@ -8,6 +8,7 @@ import (
 	"github.com/jaider-nieto/ecommerce-go/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/models"
 	"github.com/jaider-nieto/ecommerce-go/utils"
+	"github.com/jaider-nieto/ecommerce-go/validations"
 )
 
 type userHandler struct {
@@ -44,12 +45,18 @@ func (h *userHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(&user)
 }
-func (h *userHandler) CreateUserHanlder(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) PostUserHanlder(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Error decoding request: " + err.Error()))
+		return
+	}
+
+	if !validations.EmailValidation(user.Email) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid email format"))
 		return
 	}
 

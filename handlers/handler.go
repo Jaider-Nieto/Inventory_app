@@ -1,3 +1,7 @@
 package handlers
 
-type Handler struct{}
+import "github.com/jaider-nieto/ecommerce-go/interfaces"
+
+type Handler struct {
+	userRepository interfaces.UserRepositoryInterface
+}

@@ -2,38 +2,45 @@ package repository
 
 import (
 	"github.com/jaider-nieto/ecommerce-go/models"
-	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	DB *gorm.DB
+	*Repository
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{DB: db}
+func NewUserRepository(repository *Repository) *UserRepository {
+	return &UserRepository{Repository: repository}
 }
 
-func (r *UserRepository) FindUsers() ([]models.User, error) {
-	var err error
-	return []models.User{}, err
+func (r *UserRepository) FindAllUsers() ([]models.User, error) {
+	var users []models.User
+
+	err := r.DB.Find(&users).Error
+
+	return users, err
+}
+func (r *UserRepository) FindUserByID(id string) (models.User, error) {
+	var user models.User
+	err := r.DB.First(&user, id).Error
+
+	r.DB.Model(&user).Association("Tasks").Find(&user.Tasks)
+
+	return user, err
+}
+func (r *UserRepository) FindUserByEmail(email string) (models.User, error) {
+	var user models.User
+	err := r.DB.Where("email = ?", user.Email).First(&user).Error
+
+	return user, err
+
+}
+func (r *UserRepository) CreateUser(user models.User) (models.User, error) {
+	err := r.DB.Create(&user).Error
+
+	return user, err
 }
 
-func (r *UserRepository) FindUserById(id int) (models.User, error) {
-	var err error
-	return models.User{}, err
-}
-
-func (r *UserRepository) CreateUserById(models.User) (models.User, error) {
-	var err error
-	return models.User{}, err
-}
-
-func (r *UserRepository) DeleteUserById(id int) error {
-	var err error
+func (r *UserRepository) DeleteUser(id string) error {
+	err := r.DB.Delete(&models.User{}, id).Error
 	return err
-}
-
-func (r *UserRepository) UpdateUserById(models.User) (models.User, error) {
-	var err error
-	return models.User{}, err
 }

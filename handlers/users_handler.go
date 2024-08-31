@@ -5,34 +5,46 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/jaider-nieto/ecommerce-go/db"
+	"github.com/jaider-nieto/ecommerce-go/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/models"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/jaider-nieto/ecommerce-go/utils"
 )
 
-func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	var users []models.User
+type userHandler struct {
+	*Handler
+}
 
-	db.DB.Find(&users)
+func NewUserHandler(UserRepository interfaces.UserRepositoryInterface) *userHandler {
+	return &userHandler{
+		Handler: &Handler{
+			userRepository: UserRepository,
+		},
+	}
+}
+
+func (h *userHandler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	users, err := h.userRepository.FindAllUsers()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	json.NewEncoder(w).Encode(users)
 }
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+func (h *userHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
-	db.DB.First(&user, params["id"])
-
-	if user.ID == 0 {
+	user, err := h.userRepository.FindUserByID(params["id"])
+	if user.ID == 0 || err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("User not found"))
 		return
 	}
-	db.DB.Model(&user).Association("Tasks").Find(&user.Tasks)
 
 	json.NewEncoder(w).Encode(&user)
 }
-func PostUserHanlder(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) CreateUserHanlder(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -41,26 +53,23 @@ func PostUserHanlder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userExist models.User
-	db.DB.Where("email = ?", user.Email).First(&userExist)
-
-	if userExist.Email == user.Email {
+	userExist, err := h.userRepository.FindUserByEmail(user.Email)
+	if userExist.Email == user.Email || err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Error email duplicated"))
 		return
 	}
 
-	hash, hashErr := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashPassword, hashErr := utils.HashPassword(user.Password)
 	if hashErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error generating password hash: " + hashErr.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error hash password: " + hashErr.Error()))
 		return
 	}
 
-	user.Password = string(hash)
+	user.Password = hashPassword
 
-	createdUser := db.DB.Create(&user)
-	dbErr := createdUser.Error
+	user, dbErr := h.userRepository.CreateUser(user)
 	if dbErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Error saving user to database: " + dbErr.Error()))
@@ -76,18 +85,22 @@ func PostUserHanlder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	var params = mux.Vars(r)
 
-	db.DB.First(&user, params["id"])
-	if user.ID == 0 {
+	user, err := h.userRepository.FindUserByID(params["id"])
+	if user.ID == 0 || err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("User not found"))
 		return
 	}
 
-	db.DB.Delete(&user)
+	deleteErr := h.userRepository.DeleteUser(params["id"])
+	if deleteErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User not deleted: " + deleteErr.Error()))
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("User deleted"))

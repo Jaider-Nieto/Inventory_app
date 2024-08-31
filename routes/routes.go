@@ -10,11 +10,16 @@ import (
 func Routes(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter()
 
+	//Inicializa el repositorio base.
 	repo := repository.NewRepository(db)
 
+	//Inicializa los repositorios.
 	userReposiroy := repository.NewUserRepository(repo)
+	taskReposirory := repository.NewTaskRepository(repo)
 
+	//Inicializa los handlers.
 	handlerUsers := handlers.NewUserHandler(userReposiroy)
+	handlerTask := handlers.NewTaskHandler(taskReposirory)
 
 	//Rutas User.
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
@@ -23,10 +28,10 @@ func Routes(db *gorm.DB) *mux.Router {
 	r.HandleFunc("/users/{id}", handlerUsers.DeleteUserHandler).Methods("DELETE")
 
 	//Rutas Task.
-	r.HandleFunc("/tasks", handlers.GetTasksHandler).Methods("GET")
-	r.HandleFunc("/tasks/{id}", handlers.GetTaskHandler).Methods("GET")
-	r.HandleFunc("/tasks", handlers.PostTasksHandler).Methods("POST")
-	r.HandleFunc("/tasks/{id}", handlers.DeleteTasksHandler).Methods("DELETE")
+	r.HandleFunc("/tasks", handlerTask.GetTasksHandler).Methods("GET")
+	r.HandleFunc("/tasks/{id}", handlerTask.GetTaskHandler).Methods("GET")
+	r.HandleFunc("/tasks", handlerTask.PostTasksHandler).Methods("POST")
+	r.HandleFunc("/tasks/{id}", handlerTask.DeleteTasksHandler).Methods("DELETE")
 
 	return r
 }

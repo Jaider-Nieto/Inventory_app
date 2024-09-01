@@ -18,7 +18,8 @@ func main() {
 
 	db.DBConnection(os.Getenv("DSN"))
 
-	db.DB.AutoMigrate(models.User{}, models.Task{})
+	db.DB.AutoMigrate(models.User{})
+	db.DB.AutoMigrate(models.Task{})
 
 	http.ListenAndServe(os.Getenv("PORT"), routes.Routes(db.DB))
 }

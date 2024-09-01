@@ -32,15 +32,17 @@ func (r *UserRepository) FindUserByEmail(email string) (models.User, error) {
 	err := r.DB.Where("email = ?", user.Email).First(&user).Error
 
 	return user, err
-
 }
 func (r *UserRepository) CreateUser(user models.User) (models.User, error) {
 	err := r.DB.Create(&user).Error
 
 	return user, err
 }
-
 func (r *UserRepository) DeleteUser(id string) error {
 	err := r.DB.Delete(&models.User{}, id).Error
+	return err
+}
+func (r *UserRepository) UpdateUser(user models.User) error {
+	err := r.DB.Save(&user).Error
 	return err
 }

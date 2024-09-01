@@ -23,15 +23,16 @@ func Routes(db *gorm.DB) *mux.Router {
 
 	//Rutas User.
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
-	r.HandleFunc("/users/{id}", handlerUsers.GetUserHandler).Methods("GET")
+	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.GetUserHandler).Methods("GET")
 	r.HandleFunc("/users", handlerUsers.PostUserHanlder).Methods("POST")
-	r.HandleFunc("/users/{id}", handlerUsers.DeleteUserHandler).Methods("DELETE")
+	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.DeleteUserHandler).Methods("DELETE")
+	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.PatchUserHandler).Methods("PATCH")
 
 	//Rutas Task.
 	r.HandleFunc("/tasks", handlerTask.GetTasksHandler).Methods("GET")
-	r.HandleFunc("/tasks/{id}", handlerTask.GetTaskHandler).Methods("GET")
+	r.HandleFunc("/tasks/{id:[0-9]+}", handlerTask.GetTaskHandler).Methods("GET")
 	r.HandleFunc("/tasks", handlerTask.PostTasksHandler).Methods("POST")
-	r.HandleFunc("/tasks/{id}", handlerTask.DeleteTasksHandler).Methods("DELETE")
+	r.HandleFunc("/tasks/{id:[0-9]+}", handlerTask.DeleteTasksHandler).Methods("DELETE")
 
 	return r
 }

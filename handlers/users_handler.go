@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -9,6 +10,7 @@ import (
 	"github.com/jaider-nieto/ecommerce-go/models"
 	"github.com/jaider-nieto/ecommerce-go/utils"
 	"github.com/jaider-nieto/ecommerce-go/validations"
+	"gorm.io/gorm"
 )
 
 type userHandler struct {
@@ -61,7 +63,7 @@ func (h *userHandler) PostUserHanlder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userExist, err := h.userRepository.FindUserByEmail(user.Email)
-	if userExist.Email == user.Email || err != nil {
+	if userExist.Email == user.Email || err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Error email duplicated"))
 		return
@@ -111,4 +113,39 @@ func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("User deleted"))
+}
+func (h *userHandler) PatchUserHandler(w http.ResponseWriter, r *http.Request) {
+	var params = mux.Vars(r)
+
+	user, err := h.userRepository.FindUserByID(params["id"])
+	if user.ID == 0 || err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("User not found"))
+		return
+	}
+
+	var input map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if firstName, ok := input["first_name"].(string); ok {
+		user.FirstName = firstName
+	}
+	if lastName, ok := input["last_name"].(string); ok {
+		user.LastName = lastName
+	}
+	if email, ok := input["email"].(string); ok {
+		user.Email = email
+	}
+
+	if err := h.userRepository.UpdateUser(user); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&user)
 }

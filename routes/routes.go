@@ -33,6 +33,7 @@ func Routes(db *gorm.DB) *mux.Router {
 	r.HandleFunc("/tasks/{id:[0-9]+}", handlerTask.GetTaskHandler).Methods("GET")
 	r.HandleFunc("/tasks", handlerTask.PostTasksHandler).Methods("POST")
 	r.HandleFunc("/tasks/{id:[0-9]+}", handlerTask.DeleteTasksHandler).Methods("DELETE")
+	r.HandleFunc("/taks/{id:[0-9]+}", handlerTask.PatchTaskHandler).Methods("PATCH")
 
 	return r
 }

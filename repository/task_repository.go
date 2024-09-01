@@ -19,7 +19,6 @@ func (r *TaskRepository) FindAllTasks() ([]models.Task, error) {
 
 	return tasks, err
 }
-
 func (r TaskRepository) FindTaskById(id string) (models.Task, error) {
 	var task models.Task
 
@@ -27,17 +26,20 @@ func (r TaskRepository) FindTaskById(id string) (models.Task, error) {
 
 	return task, err
 }
-
 func (r TaskRepository) CreateTask(task models.Task) (models.Task, error) {
 	err := r.DB.Create(&task).Error
 
 	return task, err
 }
-
 func (r TaskRepository) DeleteTask(id string) error {
 	var task models.Task
 
 	err := r.DB.Delete(&task, id).Error
+
+	return err
+}
+func (r TaskRepository) UpdateTask(task models.Task) error {
+	err := r.DB.Save(&task).Error
 
 	return err
 }

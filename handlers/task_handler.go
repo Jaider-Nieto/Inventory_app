@@ -70,3 +70,39 @@ func (h *taskHandler) DeleteTasksHandler(w http.ResponseWriter, r *http.Request)
 	}
 	w.WriteHeader(http.StatusOK)
 }
+func (h *taskHandler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var params = mux.Vars(r)
+
+	task, err := h.taskRepository.FindTaskById(params["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Task not found: " + err.Error()))
+		return
+	}
+
+	var input map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	if title, ok := input["title"].(string); ok {
+		task.Title = title
+	}
+	if description, ok := input["description"].(string); ok {
+		task.Description = description
+	}
+	if done, ok := input["done"].(bool); ok {
+		task.Done = done
+	}
+
+	if err := h.taskRepository.UpdateTask(task); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&task)
+}

@@ -6,10 +6,12 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/jaider-nieto/ecommerce-go/auth"
 	"github.com/jaider-nieto/ecommerce-go/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/models"
 	"github.com/jaider-nieto/ecommerce-go/utils"
 	"github.com/jaider-nieto/ecommerce-go/validations"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -47,7 +49,36 @@ func (h *userHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(&user)
 }
-func (h *userHandler) PostUserHanlder(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) LoginUserHanlder(w http.ResponseWriter, r *http.Request) {
+	var userLogin models.UserLogin
+	if err := json.NewDecoder(r.Body).Decode(&userLogin); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error decoding request: " + err.Error()))
+		return
+	}
+
+	user, err := h.userRepository.FindUserByEmail(userLogin.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Not found user by email" + user.Email + ": " + err.Error()))
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password)); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+	}
+
+	token, err := auth.CreateJWT(user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+	}
+
+	w.Header().Set("Authorization", "Bearer"+token)
+
+	w.WriteHeader(http.StatusOK)
+}
+func (h *userHandler) RegisterUserHanlder(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -85,14 +116,16 @@ func (h *userHandler) PostUserHanlder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	encodeErr := json.NewEncoder(w).Encode(&user)
-
-	if encodeErr != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Error encoding response: " + encodeErr.Error()))
-		return
+	token, err := auth.CreateJWT(user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 	}
+
+	w.Header().Set("Authorization", "Bearer"+token)
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(&user)
 }
 func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	var params = mux.Vars(r)

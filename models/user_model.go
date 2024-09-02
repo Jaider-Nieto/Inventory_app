@@ -17,3 +17,8 @@ type UserUpdate struct {
 	Email     *string `json:"email,omitempty"`
 	Password  *string `json:"password,omitempty"`
 }
+
+type UserLogin struct {
+	Email    string `gorm:"not null" json:"email"`
+	Password string `gorm:"not null" json:"password"`
+}

@@ -22,9 +22,10 @@ func Routes(db *gorm.DB) *mux.Router {
 	handlerTask := handlers.NewTaskHandler(taskReposirory)
 
 	//Rutas User.
+	r.HandleFunc("/register", handlerUsers.RegisterUserHanlder).Methods("POST")
+	r.HandleFunc("/login", handlerUsers.LoginUserHanlder).Methods("POST")
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.GetUserHandler).Methods("GET")
-	r.HandleFunc("/users", handlerUsers.PostUserHanlder).Methods("POST")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.DeleteUserHandler).Methods("DELETE")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.PatchUserHandler).Methods("PATCH")
 

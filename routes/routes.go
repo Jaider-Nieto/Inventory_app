@@ -1,8 +1,12 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/jaider-nieto/ecommerce-go/handlers"
+	"github.com/jaider-nieto/ecommerce-go/middlewares"
+	"github.com/jaider-nieto/ecommerce-go/models"
 	"github.com/jaider-nieto/ecommerce-go/repository"
 	"gorm.io/gorm"
 )
@@ -22,7 +26,7 @@ func Routes(db *gorm.DB) *mux.Router {
 	handlerTask := handlers.NewTaskHandler(taskReposirory)
 
 	//Rutas User.
-	r.HandleFunc("/register", handlerUsers.RegisterUserHanlder).Methods("POST")
+	r.Handle("/register", middlewares.ValidationMiddleware(http.HandlerFunc(handlerUsers.RegisterUserHandlder), &models.User{})).Methods("POST")
 	r.HandleFunc("/login", handlerUsers.LoginUserHanlder).Methods("POST")
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.GetUserHandler).Methods("GET")

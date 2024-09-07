@@ -27,7 +27,9 @@ func Routes(db *gorm.DB) *mux.Router {
 
 	//Rutas User.
 	r.Handle("/register", middlewares.ValidationMiddleware(http.HandlerFunc(handlerUsers.RegisterUserHandlder), &models.User{})).Methods("POST")
-	r.HandleFunc("/login", handlerUsers.LoginUserHanlder).Methods("POST")
+	
+	r.Handle("/login", middlewares.ValidationMiddleware(http.HandlerFunc(handlerUsers.LoginUserHanlder), &models.UserLogin{})).Methods("POST")
+
 	r.HandleFunc("/users", handlerUsers.GetUsersHandler).Methods("GET")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.GetUserHandler).Methods("GET")
 	r.HandleFunc("/users/{id:[0-9]+}", handlerUsers.DeleteUserHandler).Methods("DELETE")

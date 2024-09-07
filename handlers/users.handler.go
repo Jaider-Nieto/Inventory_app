@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,7 +11,6 @@ import (
 	"github.com/jaider-nieto/ecommerce-go/models"
 	"github.com/jaider-nieto/ecommerce-go/utils"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type userHandler struct {
@@ -58,7 +57,8 @@ func (h *userHandler) RegisterUserHandlder(w http.ResponseWriter, r *http.Reques
 	}
 
 	userExist, err := h.userRepository.FindUserByEmail(user.Email)
-	if userExist.Email == user.Email || err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if userExist.Email == user.Email || err != nil && err.Error() != "email not found" {
+		log.Printf("%v____________", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("error email duplicated"))
 		return
@@ -101,19 +101,22 @@ func (h *userHandler) LoginUserHanlder(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepository.FindUserByEmail(userLogin.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Not found user by email" + user.Email + ": " + err.Error()))
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("user not found"))
+		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password)); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("incorret password"))
+		return
 	}
 
 	token, err := auth.CreateJWT(user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
+		return
 	}
 
 	w.Header().Set("Authorization", "Bearer"+token)

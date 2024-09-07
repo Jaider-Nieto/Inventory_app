@@ -3,6 +3,10 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"log"
+
+	// "log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -21,6 +25,12 @@ func initHandlerUsers(t *testing.T) *userHandler {
 
 	userRepositoryMock := &repository.UserRepositoryMocked{}
 	return NewUserHandler(userRepositoryMock)
+}
+func initRequest(method string, url string, body io.Reader) (*httptest.ResponseRecorder, *http.Request) {
+	req := httptest.NewRequest(method, url, body)
+	rr := httptest.NewRecorder()
+
+	return rr, req
 }
 
 func TestGetUsersHandler(t *testing.T) {
@@ -55,9 +65,7 @@ func TestGetUsersHandler(t *testing.T) {
 		tc := testCases[i]
 
 		t.Run(tc.Name, func(t *testing.T) {
-
-			req := httptest.NewRequest(http.MethodGet, "/users", nil)
-			rr := httptest.NewRecorder()
+			rr, req := initRequest(http.MethodGet, "/users", nil)
 
 			h.GetUsersHandler(rr, req)
 
@@ -109,8 +117,7 @@ func TestGetUserHandler(t *testing.T) {
 		tc := tc[i]
 
 		t.Run(tc.Name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/users/"+tc.UserID, nil)
-			rr := httptest.NewRecorder()
+			rr, req := initRequest(http.MethodGet, "/users/"+tc.UserID, nil)
 
 			req = mux.SetURLVars(req, map[string]string{
 				"id": tc.UserID,
@@ -211,8 +218,7 @@ func TestRegisterUserHandlder(t *testing.T) {
 				&models.User{},
 			)
 
-			req := httptest.NewRequest("POST", "/register", bytes.NewBuffer(body))
-			rr := httptest.NewRecorder()
+			rr, req := initRequest(http.MethodPost, "/register", bytes.NewBuffer(body))
 
 			req.Header.Set("Content-Type", "application/json")
 
@@ -225,6 +231,7 @@ func TestRegisterUserHandlder(t *testing.T) {
 			if tc.ExpectedStatus == http.StatusCreated {
 				var gotUser models.User
 				if err := json.Unmarshal(rr.Body.Bytes(), &gotUser); err != nil {
+					log.Panicf("%v", rr.Body.String())
 					t.Fatalf("failed to unmarshal response body: %v", err)
 				}
 
@@ -239,3 +246,92 @@ func TestRegisterUserHandlder(t *testing.T) {
 		})
 	}
 }
+func TestLoginUserHanlder(t *testing.T) {
+	tc := []struct {
+		Name           string
+		ExpectedError  string
+		ExpectedStatus int
+		ExpectedToken  string
+		UserLogin      models.UserLogin
+	}{
+		{
+			Name:           "valid login",
+			ExpectedStatus: http.StatusOK,
+			ExpectedToken:  "BearereyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQHZhbGlkLmNvbSIsImZpcnN0X25hbWUiOiJKYWlkZXIifQ.O8hk_iNG08quNDiqtBAX2WLLIAEu5phS8DIG2wPWgP8",
+			UserLogin: models.UserLogin{
+				Email:    "email@valid.com",
+				Password: "hashpassword",
+			},
+		},
+		{
+			Name:           "invalid email",
+			ExpectedStatus: http.StatusBadRequest,
+			ExpectedError:  "Field validation error on Email: email",
+			UserLogin: models.UserLogin{
+				Email:    "invalid@email",
+				Password: "hashpassword",
+			},
+		},
+		{
+			Name:           "user not found",
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedError:  "user not found",
+			UserLogin: models.UserLogin{
+				Email:    "user@notfound.com",
+				Password: "hashpassword",
+			},
+		},
+		{
+			Name:           "incorrect password",
+			ExpectedStatus: http.StatusBadRequest,
+			ExpectedError:  "incorret password",
+			UserLogin: models.UserLogin{
+				Email:    "email@valid.com",
+				Password: "aelkfnwlfnowfa",
+			},
+		},
+	}
+
+	h := initHandlerUsers(t)
+
+	for i := range tc {
+		tc := tc[i]
+
+		t.Run(tc.Name, func(t *testing.T) {
+
+			body, err := json.Marshal(tc.UserLogin)
+			if err != nil {
+				t.Fatalf("could not marshal json: %v", err)
+			}
+
+			handler := middlewares.ValidationMiddleware(
+				http.HandlerFunc(h.LoginUserHanlder),
+				&models.UserLogin{},
+			)
+
+			rr, req := initRequest(http.MethodPost, "/login", bytes.NewBuffer(body))
+
+			req.Header.Set("Content-Type", "application/json")
+
+			handler.ServeHTTP(rr, req)
+
+			// log.Printf("error %v", rr.Body.String())
+			if rr.Code != tc.ExpectedStatus {
+				// log.Printf("%v", rr.Header().Get("Authorization"))
+				t.Fatalf("unexpected status: got %v want %v", rr.Code, tc.ExpectedStatus)
+			}
+
+			if rr.Code == http.StatusOK {
+				if rr.Header().Get("Authorization") != tc.ExpectedToken {
+					t.Fatalf("unexpected token: got %v want %v",
+						rr.Header().Get("Authorization"), tc.ExpectedToken)
+				}
+			} else if rr.Code == http.StatusBadRequest || rr.Code == http.StatusNotFound {
+				if rr.Body.String() != tc.ExpectedError {
+					t.Fatalf("unexpected error: got %v want %v", rr.Body.String(), tc.ExpectedError)
+				}
+			}
+		})
+	}
+}
+

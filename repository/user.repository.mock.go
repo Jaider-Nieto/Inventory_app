@@ -51,7 +51,17 @@ func (rm *UserRepositoryMocked) CreateUser(user models.User) (models.User, error
 	return userCreated, nil
 }
 func (rm *UserRepositoryMocked) FindUserByEmail(email string) (models.User, error) {
-	return models.User{}, nil
+	if email == "email@valid.com" {
+		return models.User{
+			Model:     gorm.Model{ID: 1},
+			FirstName: "Jaider",
+			LastName:  "Nieto",
+			Email:     "email@valid.com",
+			Password:  "$2a$10$pPGhl2x0uUR4QkKKMnQWz.JzSTkzI7.SNyGn7iW8cCYNByFUeGdq2",
+		}, nil
+	}
+
+	return models.User{}, errors.New("email not found")
 }
 func (rm *UserRepositoryMocked) DeleteUser(id string) error {
 	return nil

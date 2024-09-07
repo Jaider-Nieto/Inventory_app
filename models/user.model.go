@@ -7,7 +7,7 @@ type User struct {
 	FirstName string `gorm:"not null" json:"first_name" validate:"required"`
 	LastName  string `gorm:"not null" json:"last_name" validate:"required"`
 	Email     string `gorm:"not null;unique" json:"email" validate:"required,email"`
-	Password  string `gorm:"not null" json:"password"  validate:"required,min=8"`
+	Password  string `gorm:"not null" json:"password" validate:"required,min=8"`
 	Tasks     []Task `json:"tasks"`
 }
 
@@ -19,6 +19,6 @@ type UserUpdate struct {
 }
 
 type UserLogin struct {
-	Email    string `gorm:"not null" json:"email" validate:"required, email"`
-	Password string `gorm:"not null" json:"password" validate:"required"`
+	Email    string `gorm:"not null;unique" json:"email" validate:"required,email"`
+	Password string `gorm:"not null" json:"password" validate:"required,min=8"`
 }

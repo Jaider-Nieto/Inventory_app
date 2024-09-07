@@ -11,9 +11,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
 func main() {
-	if err := godotenv.Load(); err != nil {
+	err := godotenv.Load()
+
+	if err != nil {
 		log.Fatal(err.Error())
 	}
 

@@ -1,4 +1,4 @@
-# CRUD TASK API
+# Inventory App
 
 Este proyecto es una API sencilla de un sistema de CRUD (Crear, Leer, Actualizar, Eliminar) desarrollada en Go (Golang). A través de este proyecto, aprendí los conceptos fundamentales para crear una API en Go, conectar una base de datos PostgreSQL, crear y relacionar tablas, y configurar un servidor HTTP.
 

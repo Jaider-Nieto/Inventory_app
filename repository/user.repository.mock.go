@@ -64,7 +64,11 @@ func (rm *UserRepositoryMocked) FindUserByEmail(email string) (models.User, erro
 	return models.User{}, errors.New("email not found")
 }
 func (rm *UserRepositoryMocked) DeleteUser(id string) error {
-	return nil
+	if id == "1" {
+		return nil
+	}
+
+	return errors.New("user not found")
 }
 func (rm *UserRepositoryMocked) UpdateUser(user models.User) error {
 	return nil

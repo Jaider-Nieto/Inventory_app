@@ -3,16 +3,13 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"gorm.io/gorm"
 	"io"
 	"log"
-
-	// "log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
-
-	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
 	"github.com/jaider-nieto/ecommerce-go/middlewares"
@@ -334,4 +331,133 @@ func TestLoginUserHanlder(t *testing.T) {
 		})
 	}
 }
+func TestDeleteUserHandler(t *testing.T) {
+	tc := []struct {
+		Name            string
+		ExpectedError   string
+		ExpectedMessage string
+		ExpectedStatus  int
+		UserID          string
+	}{
+		{
+			Name:            "Delete user",
+			UserID:          "1",
+			ExpectedStatus:  http.StatusOK,
+			ExpectedMessage: "user deleted",
+		},
+		{
+			Name:           "User not found",
+			UserID:         "99",
+			ExpectedStatus: http.StatusNotFound,
+			ExpectedError:  "user not found",
+		},
+	}
 
+	h := initHandlerUsers(t)
+
+	for i := range tc {
+		tc := tc[i]
+
+		t.Run(tc.Name, func(t *testing.T) {
+
+			rr, req := initRequest(http.MethodDelete, "/users/"+tc.UserID, nil)
+
+			req = mux.SetURLVars(req, map[string]string{
+				"id": tc.UserID,
+			})
+
+			h.DeleteUserHandler(rr, req)
+
+			if rr.Code != tc.ExpectedStatus {
+				t.Fatalf("unexpected status: got %v want %v", rr.Code, tc.ExpectedStatus)
+			}
+
+			if rr.Code == http.StatusOK {
+				if rr.Body.String() != tc.ExpectedMessage {
+					t.Fatalf("unexpected message: got %v want %v", rr.Body.String(), tc.ExpectedMessage)
+				}
+			} else if rr.Code == http.StatusBadRequest || rr.Code == http.StatusNotFound {
+				if rr.Body.String() != tc.ExpectedError {
+					t.Fatalf("unexpected error: got %v want %v", rr.Body.String(), tc.ExpectedError)
+				}
+			}
+		})
+	}
+}
+func TestPatchUserHandler(t *testing.T) {
+	tc := []struct {
+		Name           string
+		ExpectedError  string
+		ExpectedStatus int
+		UserID         string
+		UserBody       models.UserUpdate
+		ExpectedUser   models.User
+	}{
+		{
+			Name:           "Patch user",
+			ExpectedStatus: http.StatusOK,
+			UserID:         "1",
+			UserBody: models.UserUpdate{
+				FirstName: "Jajaider",
+				Email:     "jaiderlol@gmail.com",
+			},
+			ExpectedUser: models.User{
+				Model:     gorm.Model{ID: 1},
+				FirstName: "Jajaider",
+				LastName:  "Nieto",
+				Email:     "jaiderlol@gmail.com",
+				Password:  "hashPassword",
+			},
+		},
+		{
+			Name:           "Not found user",
+			ExpectedStatus: http.StatusNotFound,
+			UserID:         "99",
+			UserBody: models.UserUpdate{
+				FirstName: "Jajaider",
+				Email:     "jaiderlol@gmail.com",
+			},
+		},
+	}
+
+	h := initHandlerUsers(t)
+
+	for i := range tc {
+		tc := tc[i]
+
+		t.Run(tc.Name, func(t *testing.T) {
+			body, err := json.Marshal(tc.UserBody)
+			if err != nil {
+				t.Fatalf("could not marshal json: %v", err)
+			}
+			rr, req := initRequest(http.MethodPatch, "/users/"+tc.UserID, bytes.NewBuffer(body))
+
+			req = mux.SetURLVars(req, map[string]string{
+				"id": tc.UserID,
+			})
+
+			h.PatchUserHandler(rr, req)
+
+			if rr.Code != tc.ExpectedStatus {
+				log.Printf("%v", rr.Body.String())
+				t.Fatalf("unexpected status: got %v want %v", rr.Code, tc.ExpectedStatus)
+			}
+
+			if rr.Code == http.StatusOK {
+				var gotUser models.User
+				if err := json.Unmarshal(rr.Body.Bytes(), &gotUser); err != nil {
+					log.Panicf("%v", rr.Body.String())
+					t.Fatalf("failed to unmarshal response body: %v", err)
+				}
+
+				if !reflect.DeepEqual(gotUser, tc.ExpectedUser) {
+					t.Errorf("unexpected response body: got %v, want %v", gotUser, tc.ExpectedUser)
+				}
+			} else if tc.ExpectedStatus == http.StatusBadRequest {
+				if rr.Body.String() != tc.ExpectedError {
+					t.Errorf("unexpected response error: got %v, want %v", tc.ExpectedError, rr.Body.String())
+				}
+			}
+		})
+	}
+}

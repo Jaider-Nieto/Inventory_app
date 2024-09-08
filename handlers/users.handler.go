@@ -129,19 +129,19 @@ func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 	user, err := h.userRepository.FindUserByID(params["id"])
 	if user.ID == 0 || err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("User not found"))
+		w.Write([]byte("user not found"))
 		return
 	}
 
 	deleteErr := h.userRepository.DeleteUser(params["id"])
 	if deleteErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("User not deleted: " + deleteErr.Error()))
+		w.Write([]byte("user not deleted: " + deleteErr.Error()))
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("User deleted"))
+	w.Write([]byte("user deleted"))
 }
 func (h *userHandler) PatchUserHandler(w http.ResponseWriter, r *http.Request) {
 	var params = mux.Vars(r)

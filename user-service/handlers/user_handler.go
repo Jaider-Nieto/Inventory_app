@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,33 +12,37 @@ import (
 )
 
 type userHandler struct {
-	*Handler
+	userRepository interfaces.UserRepositoryInterface
 }
 
 func NewUserHandler(UserRepository interfaces.UserRepositoryInterface) *userHandler {
 	return &userHandler{
-		Handler: &Handler{
 			userRepository: UserRepository,
-		},
 	}
 }
 
 func (h *userHandler) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users, err := h.userRepository.FindAllUsers()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(users)
 }
 func (h *userHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	user, err := h.userRepository.FindUserByID(params["id"])
-	if user.ID <= 0 || err != nil {
-		w.WriteHeader(http.StatusNotFound)
+	if err != nil {
+		if err.Error() == "user not found" {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -51,15 +54,14 @@ func (h *userHandler) RegisterUserHandlder(w http.ResponseWriter, r *http.Reques
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("error decoding request: " + err.Error()))
+		w.Write([]byte("Error decoding request: " + err.Error()))
 		return
 	}
 
 	userExist, err := h.userRepository.FindUserByEmail(user.Email)
 	if userExist.Email == user.Email || err != nil && err.Error() != "email not found" {
-		log.Printf("%v____________", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("error email duplicated"))
+		w.Write([]byte("internal server error"))
 		return
 	}
 
@@ -74,20 +76,10 @@ func (h *userHandler) RegisterUserHandlder(w http.ResponseWriter, r *http.Reques
 
 	user, dbErr := h.userRepository.CreateUser(user)
 	if dbErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("error saving user to database: " + dbErr.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
 		return
 	}
-
-	// llamada al servicio de auntenticacion
-
-	// token, err := auth.CreateJWT(user)
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	w.Write([]byte(err.Error()))
-	// }
-
-	// w.Header().Set("Authorization", "Bearer"+token)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(&user)
@@ -102,8 +94,13 @@ func (h *userHandler) LoginUserHanlder(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepository.FindUserByEmail(userLogin.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("user not found"))
+		if err.Error() == "email not found" {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -114,21 +111,27 @@ func (h *userHandler) LoginUserHanlder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("user login"))
 }
 func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	var params = mux.Vars(r)
 
-	user, err := h.userRepository.FindUserByID(params["id"])
-	if user.ID == 0 || err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("user not found"))
+	_, err := h.userRepository.FindUserByID(params["id"])
+	if err != nil {
+		if err.Error() == "user not found" {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
 	deleteErr := h.userRepository.DeleteUser(params["id"])
 	if deleteErr != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("user not deleted: " + deleteErr.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
 		return
 	}
 
@@ -139,9 +142,14 @@ func (h *userHandler) PatchUserHandler(w http.ResponseWriter, r *http.Request) {
 	var params = mux.Vars(r)
 
 	user, err := h.userRepository.FindUserByID(params["id"])
-	if user.ID == 0 || err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("User not found"))
+	if err != nil {
+		if err.Error() == "user not found" {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
 		return
 	}
 
@@ -163,7 +171,7 @@ func (h *userHandler) PatchUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.userRepository.UpdateUser(user); err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}

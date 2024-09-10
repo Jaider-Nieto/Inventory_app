@@ -2,14 +2,15 @@ package repository
 
 import (
 	"github.com/jaider-nieto/ecommerce-go/user-service/models"
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	*Repository
+	DB *gorm.DB
 }
 
-func NewUserRepository(repository *Repository) *UserRepository {
-	return &UserRepository{Repository: repository}
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{DB: db}
 }
 
 func (r *UserRepository) FindAllUsers() ([]models.User, error) {

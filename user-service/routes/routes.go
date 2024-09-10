@@ -14,11 +14,8 @@ import (
 func Routes(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter()
 
-	//Inicializa el repositorio base.
-	repo := repository.NewRepository(db)
-
 	//Inicializa los repositorios.
-	userReposiroy := repository.NewUserRepository(repo)
+	userReposiroy := repository.NewUserRepository(db)
 
 	//Inicializa los handlers.
 	handlerUsers := handlers.NewUserHandler(userReposiroy)

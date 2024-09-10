@@ -12,10 +12,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal(err.Error())
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file")
 	}
 
 	db.DBConnection(os.Getenv("DSN"))

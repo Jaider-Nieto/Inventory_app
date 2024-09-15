@@ -17,7 +17,7 @@ type userHandler struct {
 
 func NewUserHandler(UserRepository interfaces.UserRepositoryInterface) *userHandler {
 	return &userHandler{
-			userRepository: UserRepository,
+		userRepository: UserRepository,
 	}
 }
 
@@ -59,7 +59,7 @@ func (h *userHandler) RegisterUserHandlder(w http.ResponseWriter, r *http.Reques
 	}
 
 	userExist, err := h.userRepository.FindUserByEmail(user.Email)
-	if userExist.Email == user.Email || err != nil && err.Error() != "email not found" {
+	if userExist.Email == user.Email || err != nil && err.Error() != "record not found" {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("internal server error"))
 		return
@@ -94,7 +94,7 @@ func (h *userHandler) LoginUserHanlder(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepository.FindUserByEmail(userLogin.Email)
 	if err != nil {
-		if err.Error() == "email not found" {
+		if err.Error() == "record not found" {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(err.Error()))
 			return
@@ -131,7 +131,7 @@ func (h *userHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 	deleteErr := h.userRepository.DeleteUser(params["id"])
 	if deleteErr != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		w.Write([]byte(deleteErr.Error()))
 		return
 	}
 

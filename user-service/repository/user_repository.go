@@ -38,7 +38,7 @@ func (r *UserRepository) CreateUser(user models.User) (models.User, error) {
 	return user, err
 }
 func (r *UserRepository) DeleteUser(id string) error {
-	err := r.DB.Delete(&models.User{}, id).Error
+	err := r.DB.Where("id = ?", id).Delete(&models.User{}, id).Error
 	return err
 }
 func (r *UserRepository) UpdateUser(user models.User) error {

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"log"
 
 	"github.com/jaider-nieto/ecommerce-go/user-service/models"
 	"gorm.io/gorm"
@@ -64,7 +63,6 @@ func (rm *UserRepositoryMocked) CreateUser(user models.User) (models.User, error
 	return userCreated, nil
 }
 func (rm *UserRepositoryMocked) FindUserByEmail(email string) (models.User, error) {
-	log.Printf("%v", email)
 	if rm.ShouldReturnError && email != "email@valid.com" {
 		return models.User{}, errors.New("internal server error")
 	}
@@ -78,7 +76,7 @@ func (rm *UserRepositoryMocked) FindUserByEmail(email string) (models.User, erro
 		}, nil
 	}
 
-	return models.User{}, errors.New("email not found")
+	return models.User{}, errors.New("record not found")
 }
 func (rm *UserRepositoryMocked) DeleteUser(id string) error {
 	if rm.ShouldReturnError || id == "1" {

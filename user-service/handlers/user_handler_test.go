@@ -202,7 +202,7 @@ func TestRegisterUserHandlder(t *testing.T) {
 		},
 		{
 			Name: "email not found",
-				ExpectedUser: models.User{
+			ExpectedUser: models.User{
 				Model:     gorm.Model{ID: 1},
 				FirstName: "Jaider",
 				LastName:  "Nieto",
@@ -323,7 +323,7 @@ func TestLoginUserHanlder(t *testing.T) {
 		{
 			Name:           "user not found",
 			ExpectedStatus: http.StatusNotFound,
-			ExpectedError:  "email not found",
+			ExpectedError:  "record not found",
 			UserLogin: models.UserLogin{
 				Email:    "user@notfound.com",
 				Password: "hashpassword",
@@ -367,9 +367,7 @@ func TestLoginUserHanlder(t *testing.T) {
 			)
 
 			rr, req := initRequest(http.MethodPost, "/login", bytes.NewBuffer(body))
-
 			req.Header.Set("Content-Type", "application/json")
-
 			handler.ServeHTTP(rr, req)
 
 			if rr.Code != tc.ExpectedStatus {

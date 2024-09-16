@@ -25,14 +25,21 @@ func (ctrl *ProductController) GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 func (ctrl *ProductController) PostProduct(c *gin.Context) {
-	var product models.Products
+	var product models.Product
 	if err := c.BindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	if !product.IsValidCategory() {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product category"})
+		return
 	}
 
 	createdProduct, err := ctrl.service.CreateProduct(product)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
 	}
 
 	c.JSON(http.StatusOK, createdProduct)

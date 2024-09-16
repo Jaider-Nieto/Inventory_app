@@ -1,6 +1,10 @@
 package models
 
-type Products struct {
+import (
+	"github.com/jaider-nieto/ecommerce-go/products-service/pkg/utils"
+)
+
+type Product struct {
 	ID          string `json:"id" bson:"_id,omitempty"`
 	Title       string `json:"title" bson:"title"`
 	Description string `json:"description" bson:"description"`
@@ -8,4 +12,8 @@ type Products struct {
 	Price       uint   `json:"price" bson:"price"`
 	Stock       uint   `json:"stock" bson:"stock"`
 	Rating      []uint `json:"rating" bson:"rating"`
+}
+
+func (p *Product) IsValidCategory() bool {
+	return utils.IsValidCategory(p.Category)
 }

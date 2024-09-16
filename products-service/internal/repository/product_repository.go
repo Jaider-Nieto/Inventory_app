@@ -18,8 +18,8 @@ func NewProductRepository(collection *mongo.Collection) *ProductRepository {
 	return &ProductRepository{collection: collection}
 }
 
-func (r *ProductRepository) FindAll() ([]models.Products, error) {
-	var products []models.Products
+func (r *ProductRepository) FindAll() ([]models.Product, error) {
+	var products []models.Product
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -35,20 +35,20 @@ func (r *ProductRepository) FindAll() ([]models.Products, error) {
 	return products, nil
 }
 
-func (r *ProductRepository) FindOne(id string) (models.Products, error) {
-	var product models.Products
+func (r *ProductRepository) FindOne(id string) (models.Product, error) {
+	var product models.Product
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	result := r.collection.FindOne(ctx, bson.M{"_id": objID})
 	if result.Err() != nil {
-		return models.Products{}, result.Err()
+		return models.Product{}, result.Err()
 	}
 
 	result.Decode(&product)
@@ -56,7 +56,7 @@ func (r *ProductRepository) FindOne(id string) (models.Products, error) {
 	return product, nil
 }
 
-func (r *ProductRepository) Create(product models.Products) (*mongo.InsertOneResult, error) {
+func (r *ProductRepository) Create(product models.Product) (*mongo.InsertOneResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 

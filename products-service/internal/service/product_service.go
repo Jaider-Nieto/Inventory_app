@@ -14,12 +14,12 @@ func NewProductService(repository *repository.ProductRepository) *ProductService
 	return &ProductService{repository: repository}
 }
 
-func (s *ProductService) GetAllProducts() ([]models.Products, error) {
+func (s *ProductService) GetAllProducts() ([]models.Product, error) {
 	return s.repository.FindAll()
 }
-func (s *ProductService) GetOneProduct(id string) (models.Products, error) {
+func (s *ProductService) GetOneProduct(id string) (models.Product, error) {
 	return s.repository.FindOne(id)
 }
-func (s *ProductService) CreateProduct(product models.Products) (*mongo.InsertOneResult, error) {
+func (s *ProductService) CreateProduct(product models.Product) (*mongo.InsertOneResult, error) {
 	return s.repository.Create(product)
 }

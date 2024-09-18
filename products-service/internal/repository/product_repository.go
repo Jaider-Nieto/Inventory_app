@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
 )
 
 type ProductRepository struct {

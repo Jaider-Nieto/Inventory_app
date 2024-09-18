@@ -19,15 +19,25 @@ func NewProductController(service *service.ProductService) *ProductController {
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
 	products, err := ctrl.service.GetAllProducts()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, products)
 }
+func (ctr *ProductController) GetProduct(c *gin.Context) {
+	product, err := ctr.service.GetOneProduct(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
 func (ctrl *ProductController) PostProduct(c *gin.Context) {
 	var product models.Product
 	if err := c.BindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -38,9 +48,10 @@ func (ctrl *ProductController) PostProduct(c *gin.Context) {
 
 	createdProduct, err := ctrl.service.CreateProduct(product)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, createdProduct)
 }
+func (ctrl *ProductController) DeleteProduct(c *gin.Context){}

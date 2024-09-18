@@ -9,6 +9,7 @@ func ProductRoutes(router *gin.Engine, productsController *controller.ProductCon
 	productGroup := router.Group("/products")
 	{
 		productGroup.GET("/", productsController.GetProducts)
+		productGroup.GET("/:user_id", productsController.GetProduct)
 		productGroup.POST("/", productsController.PostProduct)
 	}
 

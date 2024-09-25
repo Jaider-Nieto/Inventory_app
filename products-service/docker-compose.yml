@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: golang-app
+    env_file:
+      - .env
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://root:1005@mongodb:27017/products_db?authSource=admin
+    volumes:
+      - ./src:/app
+    networks:
+      - backend-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1005
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend-network
+
+volumes:
+  mongodb_data:
+
+
+networks:
+  backend-network:
+    driver: bridge

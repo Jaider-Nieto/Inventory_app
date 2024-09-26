@@ -1,0 +1,51 @@
+basePath: /
+definitions:
+  models.Product:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      price:
+        type: integer
+      rating:
+        items:
+          type: integer
+        type: array
+      stock:
+        type: integer
+      title:
+        type: string
+    type: object
+host: localhost:8082
+info:
+  contact: {}
+  description: Tag service API in Go using Gin framework
+  title: Tag Service API
+  version: "1.0"
+paths:
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Create a new product in MongoDB
+      parameters:
+      - description: Product Data
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Create product
+      tags:
+      - products
+swagger: "2.0"

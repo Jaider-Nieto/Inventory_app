@@ -4,6 +4,7 @@ import (
 	"github.com/jaider-nieto/ecommerce-go/products-service/pkg/utils"
 )
 
+// swagger:model
 type Product struct {
 	ID          string `json:"id" bson:"_id,omitempty"`
 	Title       string `json:"title" bson:"title"`

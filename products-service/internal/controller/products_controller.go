@@ -34,6 +34,16 @@ func (ctr *ProductController) GetProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, product)
 }
+
+// @Summary Create product
+// @Description Create a new product in MongoDB
+// @Tags products
+// @Accept  json
+// @Produce  json
+// @Param product body models.Product true "Product Data"
+// @Success 200 
+// @Failure 400 
+// @Router /products [post]
 func (ctrl *ProductController) PostProduct(c *gin.Context) {
 	var product models.Product
 	if err := c.BindJSON(&product); err != nil {
@@ -54,4 +64,4 @@ func (ctrl *ProductController) PostProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, createdProduct)
 }
-func (ctrl *ProductController) DeleteProduct(c *gin.Context){}
+func (ctrl *ProductController) DeleteProduct(c *gin.Context) {}

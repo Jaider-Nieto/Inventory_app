@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,16 +18,17 @@ func NewProductController(service *service.ProductService) *ProductController {
 }
 
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
-	products, err := ctrl.service.GetAllProducts()
+	products, err := ctrl.service.GetAllProducts(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Println("controller")
 	c.JSON(http.StatusOK, products)
 }
 func (ctr *ProductController) GetProduct(c *gin.Context) {
-	product, err := ctr.service.GetOneProduct(c.Param("user_id"))
+	product, err := ctr.service.GetOneProduct(c.Request.Context(), c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -56,7 +58,7 @@ func (ctrl *ProductController) PostProduct(c *gin.Context) {
 		return
 	}
 
-	createdProduct, err := ctrl.service.CreateProduct(product)
+	createdProduct, err := ctrl.service.CreateProduct(c.Request.Context(), product)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

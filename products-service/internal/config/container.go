@@ -11,10 +11,12 @@ import (
 func NewContainer() *controller.ProductController {
 
 	mongoURI := os.Getenv("MONGO_URI")
-	client := InitMongoDB(mongoURI)
+	clientMongo := InitMongoDB(mongoURI)
+	clientRedis := InitRedisClient(os.Getenv("REDIS_ADR"), os.Getenv("REDIS_PASSWORD"))
 
-	productRepository := repository.NewProductRepository(GetMongoCollection(client, "products_db", "products"))
-	productService := service.NewProductService(productRepository)
+	productCacheRepository := repository.NewProductRedisRepository(clientRedis)
+	productRepository := repository.NewProductRepository(GetMongoCollection(clientMongo, "products_db", "products"))
+	productService := service.NewProductService(productRepository, productCacheRepository)
 	productController := controller.NewProductController(productService)
 
 	return productController

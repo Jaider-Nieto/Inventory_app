@@ -27,9 +27,11 @@ WORKDIR /root/
 
 # Copiamos el binario compilado desde la etapa de construcción
 COPY --from=builder /app/main .
+
+# Copiamos el archivo .env desde la etapa de construcción
 COPY --from=builder /app/.env .
 
-# Exponemos el puerto en el que la aplicación escucha (ej: 8080)
+# Exponemos el puerto en el que la aplicación escucha
 EXPOSE 8082
 
 # Comando para ejecutar la aplicación

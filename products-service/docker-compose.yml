@@ -32,6 +32,16 @@ services:
     networks:
       - backend-network
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: redispass
+    networks:
+      - backend-network
+
 volumes:
   mongodb_data:
 

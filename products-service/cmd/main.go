@@ -26,6 +26,7 @@ func main() {
 
 	c := config.NewContainer()
 	router := gin.Default()
+	router.Use(gin.Logger())
 
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

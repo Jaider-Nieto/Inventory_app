@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ProductRepository gestiona las operaciones de base de datos relacionadas con los productos
@@ -22,14 +23,16 @@ func NewProductRepository(collection *mongo.Collection) *ProductRepository {
 }
 
 // FindAll obtiene todos los productos de la colección
-func (r *ProductRepository) FindAll() ([]models.Product, error) {
+func (r *ProductRepository) FindAll(page, size int) ([]models.Product, error) {
 	var products []models.Product
 	// Establece un contexto con timeout de 5 segundos para la operación de búsqueda
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
+	skip := (page - 1) * size
+
 	// Realiza la búsqueda de todos los productos
-	cursor, err := r.collection.Find(ctx, bson.M{})
+	cursor, err := r.collection.Find(ctx, bson.M{}, options.Find().SetSkip(int64(skip)).SetLimit(int64(size)))
 	if err != nil {
 		return nil, err
 	}

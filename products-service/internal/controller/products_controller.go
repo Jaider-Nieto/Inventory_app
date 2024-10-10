@@ -3,6 +3,7 @@ package controller
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
@@ -29,8 +30,22 @@ func NewProductController(service *service.ProductService) *ProductController {
 // @Failure 400 {object} map[string]string "error"
 // @Router /products [get]
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
+	page := c.Query("page")
+	pageSize := c.Query("size")
+
+	// Convierte los parámetros a enteros
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt < 1 {
+		pageInt = 1 // Si hay un error, usar la primera página
+	}
+
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil || pageSizeInt < 1 {
+		pageSizeInt = 10 // Si hay un error, usar un tamaño de página por defecto
+	}
+
 	// Llama al servicio para obtener todos los productos
-	products, err := ctrl.service.GetAllProducts(c.Request.Context())
+	products, err := ctrl.service.GetAllProducts(c.Request.Context(),pageInt, pageSizeInt)
 	if err != nil {
 		// Retorna un error si ocurre al obtener productos
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

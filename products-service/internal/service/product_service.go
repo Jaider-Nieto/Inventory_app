@@ -17,7 +17,7 @@ func NewProductService(repository interfaces.ProductMongoRepositoryInterface, ca
 	return &ProductService{repository: repository, cache: cache}
 }
 
-func (s *ProductService) GetAllProducts(ctx context.Context) ([]models.Product, error) {
+func (s *ProductService) GetAllProducts(ctx context.Context, page, size int) ([]models.Product, error) {
 	// Intenta obtener los productos del caché de Redis.
 	cacheProducts, err := s.cache.GetAll(ctx, "products_all")
 	if err != nil {
@@ -30,7 +30,7 @@ func (s *ProductService) GetAllProducts(ctx context.Context) ([]models.Product, 
 	}
 
 	// Si no hay productos en caché, búscalos en la base de datos.
-	products, err := s.repository.FindAll()
+	products, err := s.repository.FindAll(page, size)
 	if err != nil {
 		return []models.Product{}, err
 	}

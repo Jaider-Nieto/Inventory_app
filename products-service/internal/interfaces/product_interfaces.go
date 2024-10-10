@@ -10,7 +10,7 @@ import (
 // ProductMongoRepositoryInterface define los métodos para interactuar con productos en MongoDB.
 type ProductMongoRepositoryInterface interface {
 	// FindAll retorna una lista de todos los productos.
-	FindAll() ([]models.Product, error)
+	FindAll(page, size int) ([]models.Product, error)
 	// FindOne busca un producto por su ID y lo retorna.
 	FindOne(id string) (*models.Product, error)
 	// Create inserta un nuevo producto y retorna el resultado de la operación.

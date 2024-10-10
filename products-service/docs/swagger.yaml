@@ -48,4 +48,31 @@ paths:
       summary: Create product
       tags:
       - products
+  /products/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a product by user_id from the database
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a product
+      tags:
+      - products
 swagger: "2.0"

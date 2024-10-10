@@ -2,19 +2,18 @@ package service
 
 import (
 	"context"
-	"log"
 
+	"github.com/jaider-nieto/ecommerce-go/products-service/internal/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
-	"github.com/jaider-nieto/ecommerce-go/products-service/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProductService struct {
-	repository *repository.ProductRepository
-	cache      *repository.ProductRedisRepository
+	repository interfaces.ProductMongoRepositoryInterface
+	cache      interfaces.ProductRedisRepositoryInterface
 }
 
-func NewProductService(repository *repository.ProductRepository, cache *repository.ProductRedisRepository) *ProductService {
+func NewProductService(repository interfaces.ProductMongoRepositoryInterface, cache interfaces.ProductRedisRepositoryInterface) *ProductService {
 	return &ProductService{repository: repository, cache: cache}
 }
 
@@ -24,10 +23,9 @@ func (s *ProductService) GetAllProducts(ctx context.Context) ([]models.Product, 
 	if err != nil {
 		return []models.Product{}, err
 	}
-	
+
 	// Si hay productos en caché, se retornan.
 	if len(cacheProducts) > 0 {
-		log.Println("cache")
 		return cacheProducts, nil
 	}
 
@@ -52,7 +50,6 @@ func (s *ProductService) GetOneProduct(ctx context.Context, id string) (*models.
 	}
 	// Si exite el producto en caché, se retorna.
 	if cacheProduct != nil {
-		log.Println("cache")
 		return cacheProduct, nil
 	}
 
@@ -67,8 +64,7 @@ func (s *ProductService) GetOneProduct(ctx context.Context, id string) (*models.
 		return nil, err
 	}
 
-	log.Println("db")
-	return &product, nil
+	return product, nil
 }
 func (s *ProductService) CreateProduct(ctx context.Context, product models.Product) (*mongo.InsertOneResult, error) {
 	return s.repository.Create(product)

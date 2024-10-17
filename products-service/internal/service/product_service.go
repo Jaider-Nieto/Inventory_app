@@ -5,7 +5,6 @@ import (
 
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProductService struct {
@@ -30,7 +29,7 @@ func (s *ProductService) GetAllProducts(ctx context.Context, page, size int) ([]
 	}
 
 	// Si no hay productos en caché, búscalos en la base de datos.
-	products, err := s.repository.FindAll(page, size)
+	products, err := s.repository.FindAll(ctx, page, size)
 	if err != nil {
 		return []models.Product{}, err
 	}
@@ -54,7 +53,7 @@ func (s *ProductService) GetOneProduct(ctx context.Context, id string) (*models.
 	}
 
 	// Si no esta el producto en caché, se busca en la base de datos.
-	product, err := s.repository.FindOne(id)
+	product, err := s.repository.FindOne(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +65,38 @@ func (s *ProductService) GetOneProduct(ctx context.Context, id string) (*models.
 
 	return product, nil
 }
-func (s *ProductService) CreateProduct(ctx context.Context, product models.Product) (*mongo.InsertOneResult, error) {
-	return s.repository.Create(product)
+func (s *ProductService) CreateProduct(ctx context.Context, product models.Product) error {
+	// Limpia el cache existente y maneja el error si lo hay.
+	if err := s.cache.Clean(ctx); err != nil {
+		return err
+	}
+
+	return s.repository.Create(ctx, product)
+}
+
+func (s *ProductService) DeleteProduct(ctx context.Context, id string) error {
+	// Elimina el producto en la base de datos y maneja el error si lo hay.
+	if err := s.repository.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	// Limpia el cache existente y maneja el error si lo hay.
+	if err := s.cache.Clean(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *ProductService) UpdateProduct(ctx context.Context, id string, product map[string]interface{}) error {
+	if err := s.repository.Update(ctx, id, product); err != nil {
+		return err
+	}
+
+	// Limpia el cache existente y maneja el error si lo hay.
+	if err := s.cache.Clean(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }

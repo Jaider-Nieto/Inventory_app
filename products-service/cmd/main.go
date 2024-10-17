@@ -16,7 +16,6 @@ import (
 // @title Tag Service API
 // @version 1.0
 // @description Tag service API in Go using Gin framework
-
 // @host localhost:8082
 // @basePath /
 func main() {

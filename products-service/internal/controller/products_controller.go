@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -30,29 +29,30 @@ func NewProductController(service *service.ProductService) *ProductController {
 // @Failure 400 {object} map[string]string "error"
 // @Router /products [get]
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
-	page := c.Query("page")
-	pageSize := c.Query("size")
+	page := c.DefaultQuery("page", "1")      // Si no se pasa el parámetro, usa 1
+	pageSize := c.DefaultQuery("size", "10") // Si no se pasa el parámetro, usa 10
 
 	// Convierte los parámetros a enteros
 	pageInt, err := strconv.Atoi(page)
 	if err != nil || pageInt < 1 {
-		pageInt = 1 // Si hay un error, usar la primera página
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page parameter"})
+		return
 	}
 
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil || pageSizeInt < 1 {
-		pageSizeInt = 10 // Si hay un error, usar un tamaño de página por defecto
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid size parameter"})
+		return
 	}
 
 	// Llama al servicio para obtener todos los productos
-	products, err := ctrl.service.GetAllProducts(c.Request.Context(),pageInt, pageSizeInt)
+	products, err := ctrl.service.GetAllProducts(c.Request.Context(), pageInt, pageSizeInt)
 	if err != nil {
 		// Retorna un error si ocurre al obtener productos
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("Fetched products successfully")
 	c.JSON(http.StatusOK, products) // Retorna los productos en formato JSON
 }
 
@@ -104,12 +104,35 @@ func (ctrl *ProductController) PostProduct(c *gin.Context) {
 	}
 
 	// Llama al servicio para crear el producto
-	createdProduct, err := ctrl.service.CreateProduct(c.Request.Context(), product)
+	err := ctrl.service.CreateProduct(c.Request.Context(), product)
 	if err != nil {
 		// Retorna un error si ocurre al crear el producto
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, createdProduct) // Retorna el producto creado en formato JSON
+	c.JSON(http.StatusOK, "created product")
+}
+func (ctrl *ProductController) DeleteProduct(c *gin.Context) {
+
+	if err := ctrl.service.DeleteProduct(c.Request.Context(), c.Param("user_id")); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, "deleted product")
+}
+func (ctrl *ProductController) UpdateProduct(c *gin.Context) {
+	var updates map[string]interface{}
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if err := ctrl.service.UpdateProduct(c.Request.Context(), c.Param("user_id"), updates); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, "deleted product")
 }

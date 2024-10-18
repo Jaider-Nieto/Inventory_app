@@ -19,15 +19,17 @@ func NewProductController(service *service.ProductService) *ProductController {
 	return &ProductController{service: *service}
 }
 
-// GetProducts maneja la solicitud para obtener todos los productos.
-// @Summary Get all products
-// @Description Get all products
+// GetProduct maneja la solicitud para obtener un producto específico por ID.
+// @Summary Get a product
+// @Description Retrieve a product by user_id from the database
 // @Tags products
-// @Accept  json
-// @Produce  json
-// @Success 200 {array} models.Product
-// @Failure 400 {object} map[string]string "error"
-// @Router /products [get]
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID" example("12345")
+// @Success 200 {object} models.Product "Product data"
+// @Failure 400 {object} map[string]string "Error description"
+// @Failure 404 {object} map[string]string "Product not found"
+// @Router /products/{user_id} [get]
 func (ctrl *ProductController) GetProducts(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")      // Si no se pasa el parámetro, usa 1
 	pageSize := c.DefaultQuery("size", "10") // Si no se pasa el parámetro, usa 10
@@ -85,8 +87,8 @@ func (ctr *ProductController) GetProduct(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param product body models.Product true "Product Data"
-// @Success 200 {object} models.Product
-// @Failure 400 {object} map[string]string "error"
+// @Success 200 {object} string
+// @Failure 400 {object} error "error"
 // @Router /products [post]
 func (ctrl *ProductController) PostProduct(c *gin.Context) {
 	var product models.Product
@@ -113,26 +115,58 @@ func (ctrl *ProductController) PostProduct(c *gin.Context) {
 
 	c.JSON(http.StatusOK, "created product")
 }
-func (ctrl *ProductController) DeleteProduct(c *gin.Context) {
 
+// DeleteProduct maneja la solicitud para borrar un producto.
+// @Summary Delete a product
+// @Description Delete a product by its user_id
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Success 200 {object} string "deleted product"
+// @Failure 400 {object} map[string]string "error"
+// @Router /products/{user_id} [delete]
+func (ctrl *ProductController) DeleteProduct(c *gin.Context) {
+	// Llama al servicio para borrar el producto utilizando el user_id del parámetro de la URL
 	if err := ctrl.service.DeleteProduct(c.Request.Context(), c.Param("user_id")); err != nil {
+		// Si ocurre un error al borrar, retorna un mensaje de error con el código 400
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
+	// Si el borrado es exitoso, retorna un mensaje de confirmación con el código 200
 	c.JSON(http.StatusOK, "deleted product")
 }
+
+// UpdateProduct maneja la solicitud para actualizar un producto.
+// @Summary Update a product
+// @Description Update a product's fields using its user_id
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Param updates body map[string]interface{} true "Product fields to update"
+// @Success 200 {object} string "updated product"
+// @Failure 400 {object} map[string]string "error"
+// @Router /products/{user_id} [patch]
 func (ctrl *ProductController) UpdateProduct(c *gin.Context) {
+	// Declara un mapa para almacenar los campos a actualizar enviados en el cuerpo de la solicitud
 	var updates map[string]interface{}
+
+	// Intenta enlazar los datos JSON del cuerpo de la solicitud al mapa
 	if err := c.ShouldBindJSON(&updates); err != nil {
+		// Si hay un error en el formato del cuerpo, retorna un error con el código 400
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
+	// Llama al servicio para actualizar el producto utilizando el user_id y los campos proporcionados
 	if err := ctrl.service.UpdateProduct(c.Request.Context(), c.Param("user_id"), updates); err != nil {
+		// Si ocurre un error al actualizar, retorna un mensaje de error con el código 400
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
+	// Si la actualización es exitosa, retorna un mensaje de confirmación con el código 200
 	c.JSON(http.StatusOK, "updated product")
 }

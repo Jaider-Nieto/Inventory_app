@@ -134,5 +134,5 @@ func (ctrl *ProductController) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, "deleted product")
+	c.JSON(http.StatusOK, "updated product")
 }

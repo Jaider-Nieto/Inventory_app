@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/interfaces"
 	"github.com/jaider-nieto/ecommerce-go/products-service/internal/models"
@@ -17,8 +18,10 @@ func NewProductService(repository interfaces.ProductMongoRepositoryInterface, ca
 }
 
 func (s *ProductService) GetAllProducts(ctx context.Context, page, size int) ([]models.Product, error) {
+	pageStr := strconv.Itoa(page)
+
 	// Intenta obtener los productos del caché de Redis.
-	cacheProducts, err := s.cache.GetAll(ctx, "products_all")
+	cacheProducts, err := s.cache.GetAll(ctx, "products_all_page_"+pageStr)
 	if err != nil {
 		return []models.Product{}, err
 	}
@@ -35,11 +38,15 @@ func (s *ProductService) GetAllProducts(ctx context.Context, page, size int) ([]
 	}
 
 	// Guarda los productos en Redis y maneja el error si lo hay.
-	if err := s.cache.Set(ctx, "products_all", products); err != nil {
+	if err := s.cache.Set(ctx, "products_all_page_"+pageStr, products); err != nil {
 		return []models.Product{}, err
 	}
 
 	return products, nil
+}
+
+func String(page int) {
+	panic("unimplemented")
 }
 func (s *ProductService) GetOneProduct(ctx context.Context, id string) (*models.Product, error) {
 	// Intenta obtener el producto del caché de Redis.

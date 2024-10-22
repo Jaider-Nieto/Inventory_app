@@ -55,7 +55,7 @@ func (ctrl *ProductController) GetProducts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, products) // Retorna los productos en formato JSON
+	c.JSON(http.StatusOK, products)
 }
 
 // GetProduct maneja la solicitud para obtener un producto específico por ID.
@@ -77,7 +77,7 @@ func (ctr *ProductController) GetProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, product) // Retorna el producto en formato JSON
+	c.JSON(http.StatusOK, product)
 }
 
 // PostProduct maneja la solicitud para crear un nuevo producto.
@@ -134,7 +134,6 @@ func (ctrl *ProductController) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	// Si el borrado es exitoso, retorna un mensaje de confirmación con el código 200
 	c.JSON(http.StatusOK, "deleted product")
 }
 
@@ -167,6 +166,5 @@ func (ctrl *ProductController) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	// Si la actualización es exitosa, retorna un mensaje de confirmación con el código 200
 	c.JSON(http.StatusOK, "updated product")
 }
